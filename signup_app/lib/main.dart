@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'signup_tip_service.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -27,7 +29,9 @@ class MyApp extends StatelessWidget {
 }
 
 class SignupPage extends StatefulWidget {
-  const SignupPage({super.key});
+  const SignupPage({super.key, this.tipService});
+
+  final SignupTipService? tipService;
 
   @override
   State<SignupPage> createState() => _SignupPageState();
@@ -43,6 +47,17 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  late final SignupTipService _tipService;
+  bool _isTipLoading = false;
+  String? _tip;
+  String? _tipError;
+
+  @override
+  void initState() {
+    super.initState();
+    // No instructor endpoint was supplied, so the app uses a labeled mock.
+    _tipService = widget.tipService ?? const MockSignupTipService();
+  }
 
   @override
   void dispose() {
@@ -62,6 +77,34 @@ class _SignupPageState extends State<SignupPage> {
           backgroundColor: Colors.green,
         ),
       );
+    }
+  }
+
+  Future<void> _getSignupTip() async {
+    if (_isTipLoading) return;
+
+    setState(() {
+      _isTipLoading = true;
+      _tip = null;
+      _tipError = null;
+    });
+
+    try {
+      final tip = normalizeSignupTip(await _tipService.fetchTip());
+      if (!mounted) return;
+      setState(() => _tip = tip);
+    } on SignupTipException catch (error) {
+      if (!mounted) return;
+      setState(() => _tipError = error.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _tipError = 'Something went wrong while getting a tip. Please retry.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isTipLoading = false);
+      }
     }
   }
 
@@ -165,6 +208,68 @@ class _SignupPageState extends State<SignupPage> {
                   },
                 ),
                 const SizedBox(height: 24),
+                OutlinedButton.icon(
+                  onPressed: _isTipLoading ? null : _getSignupTip,
+                  icon: _isTipLoading
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.lightbulb_outline),
+                  label: Text(
+                    _isTipLoading ? 'Getting a tip...' : 'Get a signup tip.',
+                  ),
+                ),
+                if (_tip != null) ...[
+                  const SizedBox(height: 12),
+                  Semantics(
+                    liveRegion: true,
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _tipService.isMock
+                                  ? 'Mock advice (no live AI called)'
+                                  : 'AI-generated advice',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(_tip!),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                if (_tipError != null) ...[
+                  const SizedBox(height: 12),
+                  Semantics(
+                    liveRegion: true,
+                    child: Card(
+                      color: Theme.of(context).colorScheme.errorContainer,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_tipError!),
+                            const SizedBox(height: 4),
+                            TextButton(
+                              onPressed: _isTipLoading ? null : _getSignupTip,
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: _submitForm,
                   style: ElevatedButton.styleFrom(
