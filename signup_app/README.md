@@ -95,9 +95,9 @@ AI advice and local validation. A privacy test fills every form field with
 synthetic values and confirms the outbound body contains only the two fixed
 request fields.
 
-The device smoke check confirms installation and startup. The author should
-still manually inspect the form, keyboard scrolling, mock-tip button, retry
-presentation, and success `SnackBar` on the submission device.
+The device smoke check confirms installation and startup. There is
+confirmed completion of the manual UI check after reviewing the form, keyboard
+scrolling, mock-tip button, retry presentation, and success `SnackBar`.
 
 ## Known limitations
 
@@ -134,9 +134,9 @@ I did most of the code myself since starter code was already given and we ust ha
 - [x] AI availability and output cannot approve, reject, or block local signup.
 - [x] Automated validation, service, retry, and privacy tests pass.
 - [x] Release APK builds successfully.
-- [ ] Add student name and personal contribution statement.
+- [x] Add student name and personal contribution statement.
 - [x] Complete the three personal reflections below.
-- [ ] Perform and record the final manual UI inspection.
+- [x] Perform and record the final manual UI inspection.
 - [ ] Submit the repository link and APK.
 
 ## Graduate reflections
